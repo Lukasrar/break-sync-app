@@ -3,5 +3,5 @@ export const theme = {
   surface: "#34495e",
   text: "#bdc3c7",
   title: "#ecf0f1",
-  contrast: "#eb4d4b",
+  contrast: "#fab1a0",
 };

@@ -17,6 +17,7 @@ export const ArticleService = {
     const { data } = await api.post(`/news/article-data`, {
       link,
     });
+
     return data;
   },
 };

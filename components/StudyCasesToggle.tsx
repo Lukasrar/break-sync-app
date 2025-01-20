@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { View, Text, Switch, StyleSheet, ScrollView } from "react-native";
 import { useMainStore } from "../stores/main";
 import { theme } from "../theme";
+import { PushNotificationService } from "../service/PushNotificationService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface StudyCase {
   name: string;
@@ -9,38 +11,44 @@ export interface StudyCase {
   _id: string;
 }
 
-interface Props {
-  studyCases: StudyCase[];
-}
+const StudyCaseToggle = () => {
+  const { setCurrentStudyCase, currentStudyCase, studyCases, expoToken } =
+    useMainStore();
 
-const StudyCaseToggle: React.FC<Props> = ({ studyCases }) => {
-  const { setCurrentStudyCase, currentStudyCase } = useMainStore();
-
-  const [toggledStudyCases, setToggledStudyCases] = useState<StudyCase[]>(
-    () => {
-      if (currentStudyCase) {
-        return [currentStudyCase];
-      }
-      return [];
-    }
-  );
+  const [toggledStudyCases, setToggledStudyCases] = useState<StudyCase[]>([]);
 
   useEffect(() => {
-    if (currentStudyCase) {
-      setToggledStudyCases([currentStudyCase]);
-    }
+    const loadSavedStudyCase = async () => {
+      const savedStudyCase = await AsyncStorage.getItem("currentStudyCase");
+      if (savedStudyCase) {
+        setToggledStudyCases([JSON.parse(savedStudyCase)]);
+      } else if (currentStudyCase) {
+        setToggledStudyCases([currentStudyCase]);
+      }
+    };
+
+    loadSavedStudyCase();
   }, [currentStudyCase]);
 
-  const handleToggleChange = (studyCase: StudyCase) => {
-    setToggledStudyCases((prevState) => {
-      if (prevState.some((item) => item._id === studyCase._id)) {
-        return prevState.filter((item) => item._id !== studyCase._id);
-      } else {
-        return [...prevState, studyCase];
-      }
-    });
+  const handleToggleChange = async (studyCase: StudyCase) => {
+    try {
+      setToggledStudyCases((prevState) => {
+        if (prevState.some((item) => item._id === studyCase._id)) {
+          return prevState.filter((item) => item._id !== studyCase._id);
+        } else {
+          return [...prevState, studyCase];
+        }
+      });
 
-    setCurrentStudyCase(studyCase);
+      await PushNotificationService.registerToken(
+        expoToken,
+        studyCase?._id || ""
+      );
+
+      setCurrentStudyCase(studyCase);
+
+      await AsyncStorage.setItem("currentStudyCase", JSON.stringify(studyCase));
+    } catch (error) {}
   };
 
   return (

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,11 +12,10 @@ import { theme } from "../theme";
 import { Article } from "../interfaces/Article";
 import { ArticleService } from "../service/ArticleService";
 import StudyCaseToggle from "../components/StudyCasesToggle";
-import { PushNotificationService } from "../service/PushNotificationService";
 import { useNavigation } from "@react-navigation/native";
 
 export default function Home() {
-  const { studyCases, expoToken, currentStudyCase } = useMainStore();
+  const { expoToken } = useMainStore();
   const [articles, setArticles] = useState<Article[]>([]);
 
   const navigation = useNavigation();
@@ -42,20 +41,6 @@ export default function Home() {
     run();
   }, [expoToken]);
 
-  useEffect(() => {
-    const run = async () => {
-      try {
-        await PushNotificationService.registerToken(
-          expoToken,
-          currentStudyCase?._id || ""
-        );
-      } catch (error: any) {
-        console.error(error);
-      }
-    };
-    run();
-  }, [expoToken, currentStudyCase]);
-
   const renderItem = ({ item }: { item: Article }) => (
     <TouchableOpacity
       style={styles.articleItem}
@@ -67,7 +52,7 @@ export default function Home() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <FlatList
         data={articles}
         keyExtractor={(item) => item._id}
@@ -76,9 +61,9 @@ export default function Home() {
         showsVerticalScrollIndicator={false}
       />
       <SafeAreaView>
-        <StudyCaseToggle studyCases={studyCases} />
+        <StudyCaseToggle />
       </SafeAreaView>
-    </View>
+    </SafeAreaView>
   );
 }
 
